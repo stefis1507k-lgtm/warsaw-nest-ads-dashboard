@@ -1,0 +1,57 @@
+# Щогодинне оновлення «Факту» в дашборді: статистика Meta (лише читання) -> зашифрований live.enc.
+# Секрети: META_TOKEN (токен лише на читання), DASH_KEY (ключ шифрування дашборду). У журнал вони не друкуються.
+# Журнал публічний, тому скрипт друкує лише кількість рядків і підсумкові числа.
+name: update-live
+
+on:
+  schedule:
+    - cron: "7 * * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "1 = лише перевірка, файл не записувати"
+        default: "0"
+      campaign_filter:
+        description: "Частина назви кампанії (порожньо = Warsaw Nest — пошук квартири)"
+        default: ""
+      since:
+        description: "Початкова дата РРРР-ММ-ДД (порожньо = 2026-10-28)"
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-live
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Оновити live.enc
+        env:
+          META_TOKEN: ${{ secrets.META_TOKEN }}
+          DASH_KEY: ${{ secrets.DASH_KEY }}
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
+          CAMPAIGN_FILTER: ${{ github.event.inputs.campaign_filter }}
+          SINCE: ${{ github.event.inputs.since }}
+        run: node scripts/update-live.mjs
+
+      - name: Записати зміни
+        if: ${{ github.event.inputs.dry_run != '1' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add live.enc
+          if git diff --cached --quiet; then echo "без змін"; else
+            git commit -m "Оновлено живі цифри"
+            git pull --rebase -q origin main
+            git push -q origin main
+          fi

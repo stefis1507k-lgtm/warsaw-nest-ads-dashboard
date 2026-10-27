@@ -55,6 +55,19 @@ body{padding:max(10px,env(safe-area-inset-top)) 10px max(14px,env(safe-area-inse
       const k = await crypto.subtle.importKey('raw', b64(key), 'AES-GCM', false, ['decrypt']);
       const P = JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, k, raw)));
       D = P.data;
+      // живі цифри (live.enc) окремим малим файлом: оновлюються щогодини, без повторного завантаження картинок
+      try {
+        const lr = await fetch('live.enc', { cache: 'no-cache' });
+        if (lr.ok) {
+          const lf = await lr.json();
+          const L = JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64(lf.iv) }, k, b64(lf.ct))));
+          (D.creatives || []).forEach((r) => { const m = L.creatives && L.creatives[r.id]; if (m) Object.assign(r, m); });
+          (D.groups || []).forEach((g) => { const m = L.groups && L.groups[g.group]; if (m) Object.assign(g, m); });
+          (L.placements || []).forEach((m) => { const p = (D.placements || []).find((x) => x.place === m.place); if (p) Object.assign(p, m); });
+          (L.daily || []).forEach((m) => { const d = (D.daily || []).find((x) => x.day === m.day); if (d) Object.assign(d, m); });
+          if (L.updated) { const sp = document.querySelector('#wn-refresh span'); if (sp) sp.textContent += ' · дані ' + new Date(L.updated).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Warsaw' }); }
+        }
+      } catch (e) { /* без живих цифр сторінка працює як раніше */ }
       root.innerHTML = P.page.replace(/<script[\s\S]*?<\/script>/g, '');
       (P.page.match(/<script[\s\S]*?<\/script>/g) || []).forEach((s) => { const el = document.createElement('script'); el.textContent = s.replace(/^<script[^>]*>/, '').replace(/<\/script>$/, ''); root.appendChild(el); });
     } catch (e) { gate.hidden = false; msg.textContent = 'Не вдалося розшифрувати дані. Відкрий повне посилання від Світлани ще раз.'; return; }
@@ -97,7 +110,7 @@ body{padding:max(10px,env(safe-area-inset-top)) 10px max(14px,env(safe-area-inse
   </form>
   <p id="wn-gateerr" hidden>Не схоже на повне посилання. Скопіюй його ще раз разом із частиною після знаку #.</p>
 </div>
-<div id="wn-refresh" hidden><button type="button" id="wn-refreshbtn" aria-label="Оновити дані" title="Оновити">↻</button><span>версія 27.10, 19:24</span></div>
+<div id="wn-refresh" hidden><button type="button" id="wn-refreshbtn" aria-label="Оновити дані" title="Оновити">↻</button><span>версія 27.10, 20:32</span></div>
 <div id="dash-root" hidden></div>
 
 </body>
