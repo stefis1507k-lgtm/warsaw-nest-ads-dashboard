@@ -26,6 +26,9 @@ body{padding:max(10px,env(safe-area-inset-top)) 10px max(14px,env(safe-area-inse
 #wn-gatein{font:16px "Manrope",sans-serif;padding:14px;border-radius:14px;border:2px solid #5a3262;background:#2a1330;color:#f6f1e7;width:100%;box-sizing:border-box}
 #wn-gateform button{font:800 16px "Manrope",sans-serif;padding:14px;border:0;border-radius:14px;background:#d3a5e8;color:#241129;cursor:pointer}
 #wn-gateerr{color:#ff8fb8!important}
+#wn-refresh{position:absolute;top:max(10px,env(safe-area-inset-top));right:14px;z-index:5;display:grid;justify-items:end;gap:2px}
+#wn-refresh button{font:800 20px/1 "Manrope",sans-serif;width:40px;height:40px;padding:0;border-radius:50%;border:2px solid #d3a5e8;background:rgba(36,17,41,.85);color:#f6f1e7;cursor:pointer;display:grid;place-items:center}
+#wn-refresh span{font:500 10px "Manrope",sans-serif;color:#cdb9d6}
 </style>
 </head>
 <body>
@@ -55,10 +58,20 @@ body{padding:max(10px,env(safe-area-inset-top)) 10px max(14px,env(safe-area-inse
       root.innerHTML = P.page.replace(/<script[\s\S]*?<\/script>/g, '');
       (P.page.match(/<script[\s\S]*?<\/script>/g) || []).forEach((s) => { const el = document.createElement('script'); el.textContent = s.replace(/^<script[^>]*>/, '').replace(/<\/script>$/, ''); root.appendChild(el); });
     } catch (e) { gate.hidden = false; msg.textContent = 'Не вдалося розшифрувати дані. Відкрий повне посилання від Світлани ще раз.'; return; }
-    root.hidden = false; if (window.__fire) window.__fire();
+    root.hidden = false; document.getElementById('wn-refresh').hidden = false; if (window.__fire) window.__fire();
   }
+  async function hardRefresh() {
+    try { const rs = await navigator.serviceWorker.getRegistrations(); await Promise.all(rs.map((r) => r.unregister())); const ks = await caches.keys(); await Promise.all(ks.map((k) => caches.delete(k))); } catch (e) {}
+    location.reload();
+  }
+  let hiddenAt = 0;
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { hiddenAt = Date.now(); return; }
+    if (hiddenAt && Date.now() - hiddenAt > 3 * 60 * 1000 && document.getElementById('dash-root').hidden === false) hardRefresh();
+  });
   document.addEventListener('DOMContentLoaded', () => {
     load();
+    const rb = document.getElementById('wn-refreshbtn'); if (rb) rb.addEventListener('click', hardRefresh);
     const form = document.getElementById('wn-gateform');
     if (form) form.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -84,6 +97,7 @@ body{padding:max(10px,env(safe-area-inset-top)) 10px max(14px,env(safe-area-inse
   </form>
   <p id="wn-gateerr" hidden>Не схоже на повне посилання. Скопіюй його ще раз разом із частиною після знаку #.</p>
 </div>
+<div id="wn-refresh" hidden><button type="button" id="wn-refreshbtn" aria-label="Оновити дані" title="Оновити">↻</button><span>версія 27.10, 19:24</span></div>
 <div id="dash-root" hidden></div>
 
 </body>
