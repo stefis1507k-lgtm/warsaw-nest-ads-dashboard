@@ -20,7 +20,12 @@ html,body{margin:0;background:#160a1a;color:#f5f0ff;font:14px/1.4 "Manrope",var(
 body{padding:max(10px,env(safe-area-inset-top)) 10px max(14px,env(safe-area-inset-bottom))}
 [hidden]{display:none!important}
 #wn-gate{max-width:28rem;margin:20vh auto 0;text-align:center;padding:0 16px}
-#wn-gate h1{font-size:22px;margin:0 0 10px}
+#wn-gate h1{font:800 26px/1.1 "Playfair Display",Georgia,serif;margin:0 0 10px;color:#f6f1e7}
+#wn-gate p{margin:0 0 14px;color:#cdb9d6;font-size:15px}
+#wn-gateform{display:grid;gap:10px}
+#wn-gatein{font:16px "Manrope",sans-serif;padding:14px;border-radius:14px;border:2px solid #5a3262;background:#2a1330;color:#f6f1e7;width:100%;box-sizing:border-box}
+#wn-gateform button{font:800 16px "Manrope",sans-serif;padding:14px;border:0;border-radius:14px;background:#d3a5e8;color:#241129;cursor:pointer}
+#wn-gateerr{color:#ff8fb8!important}
 </style>
 </head>
 <body>
@@ -36,7 +41,7 @@ body{padding:max(10px,env(safe-area-inset-top)) 10px max(14px,env(safe-area-inse
   window.dash = {
     data: (id) => ({ status: D[id] ? 'ok' : 'missing', data: D[id] || [] }),
     onData: (f) => { window.__fire = f; f(); },
-    colors: ['#4db8ff', '#22d3c5', '#ffc857', '#2ee6a6'], setLink: () => {}, params: () => ({}), setParams: () => {}, resetParams: () => {}
+    colors: ['#b57acd', '#6fd8cf', '#d3a5e8', '#5fe0b0'], setLink: () => {}, params: () => ({}), setParams: () => {}, resetParams: () => {}
   };
   async function load() {
     const gate = document.getElementById('wn-gate'), root = document.getElementById('dash-root'), msg = document.getElementById('wn-gatemsg');
@@ -52,12 +57,33 @@ body{padding:max(10px,env(safe-area-inset-top)) 10px max(14px,env(safe-area-inse
     } catch (e) { gate.hidden = false; msg.textContent = 'Не вдалося розшифрувати дані. Відкрий повне посилання від Світлани ще раз.'; return; }
     root.hidden = false; if (window.__fire) window.__fire();
   }
-  document.addEventListener('DOMContentLoaded', load);
+  document.addEventListener('DOMContentLoaded', () => {
+    load();
+    const form = document.getElementById('wn-gateform');
+    if (form) form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const v = document.getElementById('wn-gatein').value.trim();
+      const mm = v.match(/k=([A-Za-z0-9_-]{43})/) || v.match(/^([A-Za-z0-9_-]{43})$/);
+      const er = document.getElementById('wn-gateerr');
+      if (!mm) { er.hidden = false; return; }
+      er.hidden = true; key = mm[1]; store.set('wn-key', key);
+      document.getElementById('wn-gate').hidden = true; load();
+    });
+  });
   addEventListener('resize', () => { clearTimeout(window.__t); window.__t = setTimeout(() => window.__fire && window.__fire(), 120); });
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 })();
 </script>
-<div id="wn-gate" hidden><h1>Warsaw Nest</h1><p id="wn-gatemsg">Відкрий повне посилання, яке дала Світлана (з ключем після знаку #).</p></div>
+<div id="wn-gate" hidden>
+  <img src="icons/icon-180.png" alt="" width="84" height="84" style="border-radius:20px;margin:0 auto 14px;display:block">
+  <h1>Warsaw Nest</h1>
+  <p id="wn-gatemsg">Встав посилання, яке дала Світлана. Це треба зробити один раз, далі воно запам'ятається.</p>
+  <form id="wn-gateform" autocomplete="off">
+    <input id="wn-gatein" type="text" inputmode="url" placeholder="Встав посилання з ключем" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Посилання з ключем">
+    <button type="submit">Відкрити</button>
+  </form>
+  <p id="wn-gateerr" hidden>Не схоже на повне посилання. Скопіюй його ще раз разом із частиною після знаку #.</p>
+</div>
 <div id="dash-root" hidden></div>
 
 </body>
