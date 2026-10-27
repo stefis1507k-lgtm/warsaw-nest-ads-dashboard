@@ -18,7 +18,7 @@ const GROUPS = { "А": "Набір А: офер 1, статика", "Б": "На�
 async function api(url) {
   const r = await fetch(url, { headers: { Authorization: "Bearer " + TOKEN } });
   const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error("Meta " + r.status + " " + (j.error ? j.error.type + " " + j.error.code : ""));
+  if (!r.ok) throw new Error("Meta " + r.status + " " + (j.error ? j.error.type + " " + j.error.code + " " + String(j.error.message || "").slice(0, 160) : ""));
   return j;
 }
 async function all(params) {
@@ -36,6 +36,7 @@ const isNarrow = (pos) => /story|stories|reels/i.test(pos || "");
 
 async function load() {
   if (MOCK) return JSON.parse(fs.readFileSync(MOCK, "utf8"));
+  if (SINCE > today) return { daily: [], place: [] }; // реклама ще не стартувала: нічого не питаємо в Meta
   const common = {
     time_range: JSON.stringify({ since: SINCE, until: today }),
     filtering: JSON.stringify([{ field: "campaign.name", operator: "CONTAIN", value: CAMP }]),

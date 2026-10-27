@@ -49,7 +49,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add live.enc
+          [ -f live.enc ] && git add live.enc
           if git diff --cached --quiet; then echo "без змін"; else
             git commit -m "Оновлено живі цифри"
             git pull --rebase -q origin main
