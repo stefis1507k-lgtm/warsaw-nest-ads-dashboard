@@ -1,5 +1,6 @@
 # Щогодинне оновлення «Факту» в дашборді: статистика Meta (лише читання) -> зашифрований live.enc.
-# Секрети: META_TOKEN (токен лише на читання), DASH_KEY (ключ шифрування дашборду). У журнал вони не друкуються.
+# Секрети: META_TOKEN (токен лише на читання), DASH_KEY (ключ шифрування дашборду),
+# SUPABASE_SERVICE_ROLE_KEY (ключ лише на читання воронки через функцію funnel_counts). У журнал вони не друкуються.
 # Журнал публічний, тому скрипт друкує лише кількість рядків і підсумкові числа.
 name: update-live
 
@@ -39,6 +40,7 @@ jobs:
         env:
           META_TOKEN: ${{ secrets.META_TOKEN }}
           DASH_KEY: ${{ secrets.DASH_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           DRY_RUN: ${{ github.event.inputs.dry_run }}
           CAMPAIGN_FILTER: ${{ github.event.inputs.campaign_filter }}
           SINCE: ${{ github.event.inputs.since }}

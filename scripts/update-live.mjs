@@ -11,6 +11,9 @@ const SINCE = process.env.SINCE || "2026-11-02";
 const DRY = process.env.DRY_RUN === "1";
 const MOCK = process.env.MOCK_FILE || "";
 const OUT = process.env.LIVE_OUT || "live.enc";
+const SB = process.env.SUPABASE_URL || "https://yfezeouwonqqtmsrsten.supabase.co";
+const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+const TEST_CONTACTS = ["243152878", "243256273"]; // тестові акаунти Світлани і Каріни, не клієнти
 const base = "https://graph.facebook.com";
 const today = new Date().toISOString().slice(0, 10);
 const GROUPS = { "А": "Набір А: офер 1, статика", "Б": "Набір Б: офер 2, статика", "В": "Набір В: відео" };
@@ -91,6 +94,18 @@ function build({ daily, place }) {
   return { v: 1, updated: new Date().toISOString(), creatives: cre, groups: grp, placements, daily: dailyRows };
 }
 
+// Воронка з Supabase: функція funnel_counts лише читає дані, тестові контакти виключає сама
+async function funnel() {
+  const r = await fetch(`${SB}/rest/v1/rpc/funnel_counts`, {
+    method: "POST",
+    headers: { apikey: SB_KEY, Authorization: "Bearer " + SB_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({ p_since: SINCE, p_test_contacts: TEST_CONTACTS }),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error("Supabase " + r.status + " " + String(j.message || "").slice(0, 160));
+  return j;
+}
+
 function encrypt(obj) {
   const key = Buffer.from(KEY, "base64url");
   if (key.length !== 32) throw new Error("DASH_KEY має бути 32 байти (43 символи base64url)");
@@ -110,6 +125,24 @@ const sum = (a, k) => a.reduce((s, x) => s + (x[k] || 0), 0);
 console.log("Рядків від Meta (по днях/по місцях):", (raw.daily || []).length, "/", (raw.place || []).length);
 console.log("Креативів з даними:", Object.keys(live.creatives).length, "| місць показу:", live.placements.length, "| днів:", live.daily.length);
 console.log("Разом витрати:", sum(live.daily, "spend").toFixed(2), "| кліки:", sum(live.daily, "clicks"));
+// Вартість кроку = витрати Meta за весь період ÷ кількість людей на кроці (повні витрати, не лише 7 днів)
+let fun = null;
+try { fun = await funnel(); } catch (e) { console.log("Не вдалося отримати воронку з Supabase:", e.message, "| блок воронки буде порожній"); }
+const spendAll = sum(raw.daily || [], "spend");
+const perStep = (n) => (fun && n > 0 && spendAll > 0 ? spendAll / n : null);
+live.funnel = fun ? {
+  since: fun.since,
+  spend: spendAll,
+  entries: fun.clients_created,
+  briefs: fun.briefs_confirmed,
+  viewings: fun.viewing_requests,
+  details: fun.details_requests,
+  cost_entry: perStep(fun.clients_created),
+  cost_brief: perStep(fun.briefs_confirmed),
+  cost_viewing: perStep(fun.viewing_requests),
+  cost_details: perStep(fun.details_requests),
+} : null;
+console.log("Воронка:", live.funnel ? JSON.stringify({ briefs: live.funnel.briefs, viewings: live.funnel.viewings, details: live.funnel.details }) : "немає");
 if (DRY) { console.log("DRY RUN: файл не записано"); process.exit(0); }
 fs.writeFileSync(OUT, encrypt(live));
 console.log("live.enc записано");
