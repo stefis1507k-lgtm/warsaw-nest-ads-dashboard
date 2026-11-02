@@ -128,7 +128,7 @@ console.log("Разом витрати:", sum(live.daily, "spend").toFixed(2), "
 // Вартість кроку = витрати Meta за весь період ÷ кількість людей на кроці (повні витрати, не лише 7 днів)
 let fun = null;
 try { fun = await funnel(); } catch (e) { console.log("Не вдалося отримати воронку з Supabase:", e.message, "| блок воронки буде порожній"); }
-const spendAll = sum(raw.daily || [], "spend");
+const spendAll = (raw.daily || []).reduce((s, x) => s + num(x.spend), 0); // Meta віддає spend рядком
 const perStep = (n) => (fun && n > 0 && spendAll > 0 ? spendAll / n : null);
 live.funnel = fun ? {
   since: fun.since,
