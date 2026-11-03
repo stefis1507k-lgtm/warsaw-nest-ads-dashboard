@@ -176,6 +176,8 @@ const spendAll = (raw.daily || []).reduce((s, x) => s + num(x.spend), 0); // Met
 const clicksAll = (raw.daily || []).reduce((s, x) => s + clicksOf(x), 0); // посилання (inline_link_clicks)
 const imprAll = (raw.daily || []).reduce((s, x) => s + num(x.impressions), 0);
 const landingAll = (raw.daily || []).reduce((s, x) => s + lpv(x), 0); // Meta: перехід на сайт (landing_page_view), для порівняння з входами в бот
+// Meta: натискання кнопки Start на лендингу (подія пікселя StartSearch; у даних Meta це тип offsite_conversion.fb_pixel_custom)
+const startAll = (raw.daily || []).reduce((s, x) => s + num(((x.actions || []).find((a) => a.action_type === "offsite_conversion.fb_pixel_custom") || {}).value), 0);
 const perStep = (n) => (n > 0 && spendAll > 0 ? spendAll / n : null);
 live.funnel = {
   since: SINCE,
@@ -183,10 +185,13 @@ live.funnel = {
   clicks: clicksAll,
   impressions: imprAll,
   landing_views: landingAll,
+  start_search: startAll,
   entries,
   briefs: fun ? fun.briefs_confirmed : null,
   viewings: fun ? fun.viewing_requests : null,
   cost_click: perStep(clicksAll),
+  cost_landing: perStep(landingAll),
+  cost_start: perStep(startAll),
   cost_entry: perStep(entries),
   cost_brief: fun ? perStep(fun.briefs_confirmed) : null,
   cost_viewing: fun ? perStep(fun.viewing_requests) : null,
