@@ -41,6 +41,7 @@ jobs:
           META_TOKEN: ${{ secrets.META_TOKEN }}
           DASH_KEY: ${{ secrets.DASH_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SMARTSENDER_API_TOKEN: ${{ secrets.SMARTSENDER_API_TOKEN }}
           DRY_RUN: ${{ github.event.inputs.dry_run }}
           CAMPAIGN_FILTER: ${{ github.event.inputs.campaign_filter }}
           SINCE: ${{ github.event.inputs.since }}
