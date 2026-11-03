@@ -13,6 +13,8 @@ const MOCK = process.env.MOCK_FILE || "";
 const OUT = process.env.LIVE_OUT || "live.enc";
 const SB = process.env.SUPABASE_URL || "https://yfezeouwonqqtmsrsten.supabase.co";
 const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+const SS_KEY = process.env.SMARTSENDER_API_TOKEN || "";
+const SS = "https://api.smartsender.com/v1";
 const TEST_CONTACTS = ["243152878", "243256273"]; // тестові акаунти Світлани і Каріни, не клієнти
 const base = "https://graph.facebook.com";
 const today = new Date().toISOString().slice(0, 10);
@@ -94,6 +96,46 @@ function build({ daily, place }) {
   return { v: 1, updated: new Date().toISOString(), creatives: cre, groups: grp, placements, daily: dailyRows };
 }
 
+// Вхід у бот = перше повідомлення контакту в SmartSender (читання). Сторінки повідомлень йдуть від нових до старих.
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+async function ss(path) {
+  for (let i = 0; i < 6; i++) {
+    const r = await fetch(SS + path, { headers: { Authorization: "Bearer " + SS_KEY, Accept: "application/json" } });
+    if (r.ok) return r.json();
+    if (r.status !== 429 && r.status !== 423) throw new Error("SmartSender " + r.status);
+    await sleep(2000 * (i + 1)); // ліміт запитів SmartSender: чекаємо й повторюємо
+  }
+  throw new Error("SmartSender: ліміт не минув після повторів");
+}
+const msgPage = async (id, p) => (await ss(`/contacts/${id}/messages?page=${p}&limitation=20`)).collection || [];
+const warsawDay = (ts) => new Date(ts).toLocaleDateString("sv-SE", { timeZone: "Europe/Warsaw" }); // YYYY-MM-DD за Варшавою
+// true, якщо перше повідомлення контакту припадає на SINCE або пізніше (за Варшавою)
+async function startedSince(id) {
+  const p1 = await msgPage(id, 1);
+  if (!p1.length) return false;
+  if (p1.length < 20) return warsawDay(p1[p1.length - 1].createdAt) >= SINCE;
+  if (warsawDay(p1[p1.length - 1].createdAt) < SINCE) return false; // на 1-й сторінці вже старіші за SINCE
+  let lo = 1, hi = 2; // знаходимо останню непорожню сторінку
+  while ((await msgPage(id, hi)).length > 0) { lo = hi; hi *= 2; await sleep(200); }
+  while (hi - lo > 1) { const mid = (lo + hi) >> 1; if ((await msgPage(id, mid)).length > 0) lo = mid; else hi = mid; await sleep(200); }
+  const last = await msgPage(id, lo);
+  return warsawDay(last[last.length - 1].createdAt) >= SINCE;
+}
+async function smartsenderEntries() {
+  if (!SS_KEY) throw new Error("немає SMARTSENDER_API_TOKEN");
+  let entries = 0;
+  for (let p = 1; ; p++) {
+    const j = await ss(`/contacts?page=${p}&limitation=20`);
+    for (const c of j.collection || []) {
+      if (TEST_CONTACTS.includes(String(c.id))) continue;
+      if (await startedSince(c.id)) entries++;
+      await sleep(150);
+    }
+    if (p >= Number((j.cursor || {}).pages || 1)) break;
+  }
+  return entries;
+}
+
 // Воронка з Supabase: функція funnel_counts лише читає дані, тестові контакти виключає сама
 async function funnel() {
   const r = await fetch(`${SB}/rest/v1/rpc/funnel_counts`, {
@@ -127,22 +169,27 @@ console.log("Креативів з даними:", Object.keys(live.creatives).l
 console.log("Разом витрати:", sum(live.daily, "spend").toFixed(2), "| кліки:", sum(live.daily, "clicks"));
 // Вартість кроку = витрати Meta за весь період ÷ кількість людей на кроці (повні витрати, не лише 7 днів)
 let fun = null;
-try { fun = await funnel(); } catch (e) { console.log("Не вдалося отримати воронку з Supabase:", e.message, "| блок воронки буде порожній"); }
+try { fun = await funnel(); } catch (e) { console.log("Не вдалося отримати воронку з Supabase:", e.message, "| брифи і перегляди буде порожньо"); }
+let entries = null;
+try { entries = await smartsenderEntries(); } catch (e) { console.log("Не вдалося порахувати входи в SmartSender:", e.message, "| входи буде порожньо"); }
 const spendAll = (raw.daily || []).reduce((s, x) => s + num(x.spend), 0); // Meta віддає spend рядком
-const perStep = (n) => (fun && n > 0 && spendAll > 0 ? spendAll / n : null);
-live.funnel = fun ? {
-  since: fun.since,
+const clicksAll = (raw.daily || []).reduce((s, x) => s + clicksOf(x), 0); // посилання (inline_link_clicks)
+const imprAll = (raw.daily || []).reduce((s, x) => s + num(x.impressions), 0);
+const perStep = (n) => (n > 0 && spendAll > 0 ? spendAll / n : null);
+live.funnel = {
+  since: SINCE,
   spend: spendAll,
-  entries: fun.clients_created,
-  briefs: fun.briefs_confirmed,
-  viewings: fun.viewing_requests,
-  details: fun.details_requests,
-  cost_entry: perStep(fun.clients_created),
-  cost_brief: perStep(fun.briefs_confirmed),
-  cost_viewing: perStep(fun.viewing_requests),
-  cost_details: perStep(fun.details_requests),
-} : null;
-console.log("Воронка:", live.funnel ? JSON.stringify({ briefs: live.funnel.briefs, viewings: live.funnel.viewings, details: live.funnel.details }) : "немає");
+  clicks: clicksAll,
+  impressions: imprAll,
+  entries,
+  briefs: fun ? fun.briefs_confirmed : null,
+  viewings: fun ? fun.viewing_requests : null,
+  cost_click: perStep(clicksAll),
+  cost_entry: perStep(entries),
+  cost_brief: fun ? perStep(fun.briefs_confirmed) : null,
+  cost_viewing: fun ? perStep(fun.viewing_requests) : null,
+};
+console.log("Воронка:", JSON.stringify({ clicks: live.funnel.clicks, impressions: live.funnel.impressions, entries: live.funnel.entries, briefs: live.funnel.briefs, viewings: live.funnel.viewings }));
 if (DRY) { console.log("DRY RUN: файл не записано"); process.exit(0); }
 fs.writeFileSync(OUT, encrypt(live));
 console.log("live.enc записано");
