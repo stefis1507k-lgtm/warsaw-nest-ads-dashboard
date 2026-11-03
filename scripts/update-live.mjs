@@ -175,12 +175,14 @@ try { entries = await smartsenderEntries(); } catch (e) { console.log("Не вд
 const spendAll = (raw.daily || []).reduce((s, x) => s + num(x.spend), 0); // Meta віддає spend рядком
 const clicksAll = (raw.daily || []).reduce((s, x) => s + clicksOf(x), 0); // посилання (inline_link_clicks)
 const imprAll = (raw.daily || []).reduce((s, x) => s + num(x.impressions), 0);
+const landingAll = (raw.daily || []).reduce((s, x) => s + lpv(x), 0); // Meta: перехід на сайт (landing_page_view), для порівняння з входами в бот
 const perStep = (n) => (n > 0 && spendAll > 0 ? spendAll / n : null);
 live.funnel = {
   since: SINCE,
   spend: spendAll,
   clicks: clicksAll,
   impressions: imprAll,
+  landing_views: landingAll,
   entries,
   briefs: fun ? fun.briefs_confirmed : null,
   viewings: fun ? fun.viewing_requests : null,
