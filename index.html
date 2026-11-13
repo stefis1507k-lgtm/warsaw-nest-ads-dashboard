@@ -26,10 +26,11 @@ body{padding:max(10px,env(safe-area-inset-top)) 10px max(14px,env(safe-area-inse
 #wn-gatein{font:16px "Manrope",sans-serif;padding:14px;border-radius:14px;border:2px solid #5a3262;background:#2a1330;color:#f6f1e7;width:100%;box-sizing:border-box}
 #wn-gateform button{font:800 16px "Manrope",sans-serif;padding:14px;border:0;border-radius:14px;background:#d3a5e8;color:#241129;cursor:pointer}
 #wn-gateerr{color:#ff8fb8!important}
-#wn-refresh{display:flex;justify-content:flex-end;align-items:center;gap:8px;white-space:nowrap;margin:0 4px 8px}
+#wn-topbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 auto 12px;max-width:1100px}
+#wn-refresh{display:flex;justify-content:flex-end;align-items:center;gap:8px;white-space:nowrap;margin:0 4px 0 auto}
 #wn-refresh button{font:800 20px/1 "Manrope",sans-serif;width:40px;height:40px;padding:0;border-radius:50%;border:2px solid #d3a5e8;background:rgba(36,17,41,.85);color:#f6f1e7;cursor:pointer;display:grid;place-items:center}
 #wn-refresh span{font:500 10px "Manrope",sans-serif;color:#cdb9d6}
-#wn-periods{display:flex;flex-wrap:wrap;gap:8px;max-width:1100px;margin:0 auto 12px;padding:0 4px}
+#wn-periods{display:flex;flex-wrap:wrap;gap:8px;flex:1 1 300px;padding:0 4px}
 #wn-periods button{font:800 15px "Manrope",sans-serif;padding:10px 16px;border-radius:14px;border:2px solid #5a3262;background:#241129;color:#f6f1e7;cursor:pointer;display:grid;text-align:left}
 #wn-periods button small{font:500 12px "Manrope",sans-serif;color:#cdb9d6}
 #wn-periods button[aria-pressed="true"]{border-color:#fff;background:#3a1d40}
@@ -147,8 +148,7 @@ body{padding:max(10px,env(safe-area-inset-top)) 10px max(14px,env(safe-area-inse
   </form>
   <p id="wn-gateerr" hidden>Не схоже на повне посилання. Скопіюй його ще раз разом із частиною після знаку #.</p>
 </div>
-<div id="wn-refresh" hidden><button type="button" id="wn-refreshbtn" aria-label="Оновити дані" title="Оновити">↻</button><span>версія 13.11, 20:55</span></div>
-<div id="wn-periods" hidden></div>
+<div id="wn-topbar"><div id="wn-periods" hidden></div><div id="wn-refresh" hidden><button type="button" id="wn-refreshbtn" aria-label="Оновити дані" title="Оновити">↻</button><span>версія 13.11, 20:57</span></div></div>
 <div id="dash-root" hidden></div>
 
 </body>
