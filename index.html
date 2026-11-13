@@ -26,7 +26,7 @@ body{padding:max(10px,env(safe-area-inset-top)) 10px max(14px,env(safe-area-inse
 #wn-gatein{font:16px "Manrope",sans-serif;padding:14px;border-radius:14px;border:2px solid #5a3262;background:#2a1330;color:#f6f1e7;width:100%;box-sizing:border-box}
 #wn-gateform button{font:800 16px "Manrope",sans-serif;padding:14px;border:0;border-radius:14px;background:#d3a5e8;color:#241129;cursor:pointer}
 #wn-gateerr{color:#ff8fb8!important}
-#wn-refresh{position:absolute;top:max(10px,env(safe-area-inset-top));right:14px;z-index:5;display:flex;align-items:center;gap:8px;white-space:nowrap}
+#wn-refresh{display:flex;justify-content:flex-end;align-items:center;gap:8px;white-space:nowrap;margin:0 4px 8px}
 #wn-refresh button{font:800 20px/1 "Manrope",sans-serif;width:40px;height:40px;padding:0;border-radius:50%;border:2px solid #d3a5e8;background:rgba(36,17,41,.85);color:#f6f1e7;cursor:pointer;display:grid;place-items:center}
 #wn-refresh span{font:500 10px "Manrope",sans-serif;color:#cdb9d6}
 #wn-periods{display:flex;flex-wrap:wrap;gap:8px;max-width:1100px;margin:0 auto 12px;padding:0 4px}
@@ -47,7 +47,7 @@ body{padding:max(10px,env(safe-area-inset-top)) 10px max(14px,env(safe-area-inse
   let D = {};
   // Періоди: «Період 1» зафіксований (period1.enc); «Період 2» ще не розпочався і без цифр (file: null)
   const PERIODS = [
-    { id: 'p1', label: 'Період 1', sub: '2–13 листопада', file: 'period1.enc', title: 'Період 1: з 2 по 13 листопада 2026', pill: 'Реклама вимкнена 13.11, цифри зафіксовано' },
+    { id: 'p1', label: 'Період 1', sub: '2–13 листопада', file: 'period1.enc', start: '02.11', title: 'Період 1: з 2 по 13 листопада 2026', pill: 'Реклама вимкнена 13.11, цифри зафіксовано' },
     { id: 'p2', label: 'Період 2', sub: 'ще не розпочався', file: null, title: 'Період 2: ще не розпочався', pill: 'Реклама ще не запущена, факту поки немає' }
   ];
   let PERIOD = store.get('wn-period') || 'p1';
@@ -106,6 +106,7 @@ body{padding:max(10px,env(safe-area-inset-top)) 10px max(14px,env(safe-area-inse
     // назва періоду й пояснення на сторінці (замість «Реклама: план проти факту» і статусу)
     const h = root.querySelector('h1'); if (h) h.textContent = PD.title;
     const pl = root.querySelector('.wn-pill'); const tn = pl && [...pl.childNodes].find((n) => n.nodeType === 3); if (tn) tn.textContent = PD.pill;
+    const ac = root.querySelector('#wn-accum'); if (ac) ac.textContent = (PD.start ? 'Накопичується від ' + PD.start : 'Накопичується від старту періоду') + '. Тестові акаунти не рахуються.';
     document.title = 'Warsaw Nest: ' + PD.label.toLowerCase();
     root.hidden = false; document.getElementById('wn-refresh').hidden = false; if (window.__fire) window.__fire();
   }
@@ -146,7 +147,7 @@ body{padding:max(10px,env(safe-area-inset-top)) 10px max(14px,env(safe-area-inse
   </form>
   <p id="wn-gateerr" hidden>Не схоже на повне посилання. Скопіюй його ще раз разом із частиною після знаку #.</p>
 </div>
-<div id="wn-refresh" hidden><button type="button" id="wn-refreshbtn" aria-label="Оновити дані" title="Оновити">↻</button><span>версія 13.11, 20:54</span></div>
+<div id="wn-refresh" hidden><button type="button" id="wn-refreshbtn" aria-label="Оновити дані" title="Оновити">↻</button><span>версія 13.11, 20:55</span></div>
 <div id="wn-periods" hidden></div>
 <div id="dash-root" hidden></div>
 
