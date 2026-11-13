@@ -16,7 +16,7 @@ const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 const SS_KEY = process.env.SMARTSENDER_API_TOKEN || "";
 const SS = "https://api.smartsender.com/v1";
 const TEST_CONTACTS = ["243152878", "243256273"]; // тестові акаунти Світлани і Каріни, не клієнти
-const base = "https://graph.facebook.com";
+const base = "https://graph.facebook.com/v26.0"; // без версії Meta відповідала застарілою версією API і робота падала
 const today = new Date().toISOString().slice(0, 10);
 const GROUPS = { "А": "Набір А: офер 1, статика", "Б": "Набір Б: офер 2, статика", "В": "Набір В: відео" };
 
