@@ -100,7 +100,7 @@ body{padding:max(10px,env(safe-area-inset-top)) 10px max(14px,env(safe-area-inse
           (L.placements || []).forEach((m) => { const p = (D.placements || []).find((x) => x.place === m.place); if (p) Object.assign(p, m); });
           (L.daily || []).forEach((m) => { const d = (D.daily || []).find((x) => x.day === m.day); if (d) Object.assign(d, m); });
           if (L.funnel) D.funnel = L.funnel;
-          D.closed = !!L.frozen; // період зафіксовано: реклама вже не йде
+          PD.closed = !!L.frozen; // період зафіксовано: реклама вже не йде
           if (L.updated) { const sp = document.querySelector('#wn-refresh span'); if (sp) sp.textContent = sp.textContent.replace(/ · дані .*$/, '') + ' · дані ' + new Date(L.updated).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Warsaw' }); }
         }
       } catch (e) { /* без живих цифр сторінка працює як раніше */ }
@@ -152,7 +152,7 @@ body{padding:max(10px,env(safe-area-inset-top)) 10px max(14px,env(safe-area-inse
   </form>
   <p id="wn-gateerr" hidden>Не схоже на повне посилання. Скопіюй його ще раз разом із частиною після знаку #.</p>
 </div>
-<div id="wn-topbar"><div id="wn-periods" hidden></div><div id="wn-refresh" hidden><button type="button" id="wn-refreshbtn" aria-label="Оновити дані" title="Оновити">↻</button><span>версія 14.11, 07:06</span></div></div>
+<div id="wn-topbar"><div id="wn-periods" hidden></div><div id="wn-refresh" hidden><button type="button" id="wn-refreshbtn" aria-label="Оновити дані" title="Оновити">↻</button><span>версія 14.11, 07:35</span></div></div>
 <div id="dash-root" hidden></div>
 <div id="wn-err" hidden style="position:fixed;left:0;right:0;bottom:0;max-height:35vh;overflow:auto;background:#5a1020;color:#fff;font:12px/1.4 monospace;padding:8px 10px;white-space:pre-wrap;z-index:99"></div>
 <script>window.addEventListener('error', (e) => { const b = document.getElementById('wn-err'); if (!b) return; b.hidden = false; b.textContent += 'Помилка: ' + (e.message || '') + ' (рядок ' + (e.lineno || '?') + ')\n'; });</script>
