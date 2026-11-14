@@ -59,7 +59,7 @@ body{padding:max(10px,env(safe-area-inset-top)) 10px max(14px,env(safe-area-inse
     PERIODS.forEach((p) => {
       const b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', p.id === PERIOD ? 'true' : 'false');
       b.append(p.label); const s = document.createElement('small'); s.textContent = p.sub; b.appendChild(s);
-      b.addEventListener('click', () => { if (p.id === PERIOD) return; PERIOD = p.id; store.set('wn-period', PERIOD); document.getElementById('dash-root').innerHTML = ''; load(); });
+      b.addEventListener('click', () => { if (p.id === PERIOD) return; PERIOD = p.id; store.set('wn-period', PERIOD); location.reload(); });
       box.appendChild(b);
     });
     box.hidden = false;
@@ -152,10 +152,10 @@ body{padding:max(10px,env(safe-area-inset-top)) 10px max(14px,env(safe-area-inse
   </form>
   <p id="wn-gateerr" hidden>Не схоже на повне посилання. Скопіюй його ще раз разом із частиною після знаку #.</p>
 </div>
-<div id="wn-topbar"><div id="wn-periods" hidden></div><div id="wn-refresh" hidden><button type="button" id="wn-refreshbtn" aria-label="Оновити дані" title="Оновити">↻</button><span>версія 14.11, 07:35</span></div></div>
+<div id="wn-topbar"><div id="wn-periods" hidden></div><div id="wn-refresh" hidden><button type="button" id="wn-refreshbtn" aria-label="Оновити дані" title="Оновити">↻</button><span>версія 14.11, 07:51</span></div></div>
 <div id="dash-root" hidden></div>
 <div id="wn-err" hidden style="position:fixed;left:0;right:0;bottom:0;max-height:35vh;overflow:auto;background:#5a1020;color:#fff;font:12px/1.4 monospace;padding:8px 10px;white-space:pre-wrap;z-index:99"></div>
-<script>window.addEventListener('error', (e) => { const b = document.getElementById('wn-err'); if (!b) return; b.hidden = false; b.textContent += 'Помилка: ' + (e.message || '') + ' (рядок ' + (e.lineno || '?') + ')\n'; });</script>
+<script>let wnErrN = 0; window.addEventListener('error', (e) => { const b = document.getElementById('wn-err'); if (!b || ++wnErrN > 5) return; b.hidden = false; b.textContent +='Помилка: ' + (e.message || '') + ' (рядок ' + (e.lineno || '?') + ')\n'; });</script>
 
 </body>
 </html>
