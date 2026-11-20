@@ -70,7 +70,14 @@ function build({ daily, place }) {
   }
   // набори
   const grp = {};
-  for (const r of daily) { const m = /Набір\s+([АБВ])/.exec(r.adset_name || ""); if (m) { const g = GROUPS[m[1]]; (grp[g] || (grp[g] = { spend: 0 })).spend += num(r.spend); } }
+  // період 2: набори названі без літер, тож групу визначаємо за першою літерою оголошення (V = відео, S = статика)
+  const P2_GROUPS = { V: "Період 2: відео", S: "Період 2: статика" };
+  for (const r of daily) {
+    const m = /Набір\s+([АБВ])/.exec(r.adset_name || "");
+    const id = idOf(r.ad_name);
+    const g = m ? GROUPS[m[1]] : id ? P2_GROUPS[id[0]] : null;
+    if (g) (grp[g] || (grp[g] = { spend: 0 })).spend += num(r.spend);
+  }
   // місця показу
   const rows = {};
   for (const r of place) {
