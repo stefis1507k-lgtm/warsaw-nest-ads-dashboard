@@ -7,7 +7,7 @@ const TOKEN = process.env.META_TOKEN || "";
 const KEY = process.env.DASH_KEY || "";
 const ACC = "1789094317922925"; // кабінет «Я і Каріша»
 const CAMP = process.env.CAMPAIGN_FILTER || 'РК-2 "Ліди" з 20.11';
-const SINCE = process.env.SINCE || "2026-11-02";
+const SINCE = process.env.SINCE || "2026-11-20";
 const DRY = process.env.DRY_RUN === "1";
 const MOCK = process.env.MOCK_FILE || "";
 const OUT = process.env.LIVE_OUT || "live.enc";
