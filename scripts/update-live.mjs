@@ -177,8 +177,12 @@ console.log("Разом витрати:", sum(live.daily, "spend").toFixed(2), "
 // Вартість кроку = витрати Meta за весь період ÷ кількість людей на кроці (повні витрати, не лише 7 днів)
 let fun = null;
 try { fun = await funnel(); } catch (e) { console.log("Не вдалося отримати воронку з Supabase:", e.message, "| брифи і перегляди буде порожньо"); }
-let entries = null;
-try { entries = await smartsenderEntries(); } catch (e) { console.log("Не вдалося порахувати входи в SmartSender:", e.message, "| входи буде порожньо"); }
+// Входи в бот з періоду 2 = нові клієнти власного Telegram-бота (Supabase, без тестових контактів).
+// SmartSender рахуємо лише як запасний варіант, якщо Supabase недоступний.
+let entries = fun ? fun.clients_created : null;
+if (entries === null) {
+  try { entries = await smartsenderEntries(); } catch (e) { console.log("Не вдалося порахувати входи в SmartSender:", e.message, "| входи буде порожньо"); }
+}
 const spendAll = (raw.daily || []).reduce((s, x) => s + num(x.spend), 0); // Meta віддає spend рядком
 const clicksAll = (raw.daily || []).reduce((s, x) => s + clicksOf(x), 0); // посилання (inline_link_clicks)
 const imprAll = (raw.daily || []).reduce((s, x) => s + num(x.impressions), 0);
